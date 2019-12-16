@@ -6,8 +6,9 @@ const fs = require('fs');
 function encodeBase64(filename, pathToSourceDir, pathToDestinationDir) {
     return new Promise((resolve, reject) => {
         const pathToFile = `${pathToSourceDir}/${filename}`;
-        const pathToOutputFile = `${pathToDestinationDir}/${filename}.res`;
-        let result = '';
+        let pathToOutputFile = `${pathToDestinationDir}/${filename}`;  
+        pathToOutputFile = pathToOutputFile.slice(0, -3);
+        pathToOutputFile += "res";
         fs.readFile(pathToFile, "utf8",
                     (err, data) => {
                         fs.writeFile(pathToOutputFile, Buffer.from(data, 'binary').toString('base64'), (err) => {
@@ -28,7 +29,6 @@ function* generator(filenames, pathToSourceDir, pathToDestinationDir) {
     let pathToSourceDir;
     let pathToDestinationDir;
 
-    // Try to make an absolute paths from relative
     try {
         pathToSourceDir = path.resolve(process.argv[2]);
     } catch (err) {
