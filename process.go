@@ -4,7 +4,7 @@ import (
 	"bufio"
 	b64 "encoding/base64"
 	"fmt"
-	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -26,21 +26,10 @@ func listDirectory(directory string) ([]string, error) {
 	return files, nil
 }
 
-func copyScan(fileRead *os.File, writeScanner *bufio.Writer) error {
-	buffer := make([]byte, 1)
-	data := ""
-	for {
-		// Read from file to buffer
-		_, err := fileRead.Read(buffer)
-		// Error handling
-		if err != nil {
-			if err != io.EOF {
-				return err
-			}
-			fmt.Println(err)
-			break
-		}
-		data += string(buffer)
+func copyScan(input string, writeScanner *bufio.Writer) error {
+	data, err := ioutil.ReadFile(input)
+	if err != nil {
+		fmt.Println(err)
 	}
 	res := b64.StdEncoding.EncodeToString([]byte(data))
 	writeScanner.WriteString(res)
@@ -50,24 +39,21 @@ func copyScan(fileRead *os.File, writeScanner *bufio.Writer) error {
 
 func copyFile(input string, output string, filename string, wg *sync.WaitGroup) {
 	defer wg.Done()
-	// open src file
 	fileRead, err := os.Open(input + filename)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 	defer fileRead.Close()
-	// create file if not exists
 	fileWrite, err := os.Create(output + strings.TrimSuffix(filename, filepath.Ext(filename)) + ".res")
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 	defer fileWrite.Close()
-	// create write scanner for it
 	writeScanner := bufio.NewWriter(fileWrite)
 
-	err = copyScan(fileRead, writeScanner)
+	err = copyScan(input+"/"+filename, writeScanner)
 	if err != nil {
 		fmt.Println(err)
 		return
